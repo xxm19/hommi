@@ -10,6 +10,9 @@ from hommi.common.import_umi_source import get_umi_subprocess_env, get_umi_dir
 from hommi.demonstration_processing.utils.generic_util import demonstration_to_display_string, get_demonstration_json_data, get_demonstration_sides_present
 
 
+GRIPPER_SIDES = {'left', 'right'}
+
+
 def detect_ar_tag_iphone(demonstration_iterator, cfg: DictConfig):
     """Adapted from 04_detect_aruco.py from UMI"""
     processed_demonstrations = set()
@@ -19,6 +22,8 @@ def detect_ar_tag_iphone(demonstration_iterator, cfg: DictConfig):
     input_video_paths: List[pathlib.Path] = []
     for demonstration_dir in demonstration_iterator(['demonstration', 'grippercalibration']):
         for side in get_demonstration_sides_present(demonstration_dir):
+            if side not in GRIPPER_SIDES:
+                continue
             video_path = pathlib.Path(demonstration_dir).joinpath(f'{side}_ultrawidergb.mp4').absolute()
             pkl_path = pathlib.Path(demonstration_dir).joinpath(f'{side}_tag_detection.pkl')
 
@@ -49,6 +54,7 @@ def detect_ar_tag_iphone(demonstration_iterator, cfg: DictConfig):
             # one chunk per thread, therefore no synchronization needed
             with concurrent.futures.ThreadPoolExecutor(max_workers=num_workers) as executor:
                 futures = set()
+                completed_futures = []
                 for video_path in tqdm(input_video_paths):
                     demonstration_dir = str(video_path.parent)
                     # side = 'left' if video_path.name == 'left_ultrawidergb.mp4' else 'right'
@@ -91,17 +97,28 @@ def detect_ar_tag_iphone(demonstration_iterator, cfg: DictConfig):
                         completed, futures = concurrent.futures.wait(futures, 
                             return_when=concurrent.futures.FIRST_COMPLETED)
                         pbar.update(len(completed))
+                        completed_futures.extend(completed)
 
                     futures.add(executor.submit(
-                        lambda x: subprocess.run(x, 
-                            capture_output=True, env=get_umi_subprocess_env()), 
+                        lambda x: subprocess.run(
+                            x, capture_output=True, text=True,
+                            env=get_umi_subprocess_env()),
                         cmd))
                     # futures.add(executor.submit(lambda x: print(' '.join(x)), cmd))
 
                 completed, futures = concurrent.futures.wait(futures)            
                 pbar.update(len(completed))
+                completed_futures.extend(completed)
     
-        [x.result() for x in completed if x.result() is not None] # fetch all the results which will throw an error if there was an error in the subprocess. Without this errors would be hidden
+        for future in completed_futures:
+            result = future.result()
+            if result is not None and result.returncode != 0:
+                print(f"Command failed: {' '.join(result.args)}")
+                if result.stdout:
+                    print(result.stdout)
+                if result.stderr:
+                    print(result.stderr)
+                result.check_returncode()
 
     print(f'\nProcessed {len(processed_demonstrations)} demonstrations')
     print(f'Skipped {len(skipped_demonstrations)} demonstrations')

@@ -13,12 +13,17 @@ from hommi.demonstration_processing.utils.gripper_util import get_gripper_width_
 from hommi.common.contants import IPHUMI_ULTRAWIDE_OFFSET_FROM_FINGER_AR_TAG_Z, IPHUMI_ULTRAWIDE_OFFSET_FROM_CENTER_X
 
 
+GRIPPER_SIDES = {'left', 'right'}
+
+
 def calibrate_gripper_range_iphone(demonstration_iterator, cfg: DictConfig):
     """Adapted from 05_run_calibrations.py from UMI"""
     skipped_demonstrations = set()
     processed_demonstrations = set()
     for demonstration_dir in demonstration_iterator('grippercalibration'):
         for side in get_demonstration_sides_present(demonstration_dir):
+            if side not in GRIPPER_SIDES:
+                continue
             tag_path = Path(demonstration_dir).joinpath(f'{side}_tag_detection.pkl').absolute()
             gripper_range_path = Path(demonstration_dir).joinpath(f'{side}_gripper_range.json').absolute()
             
