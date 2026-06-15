@@ -94,11 +94,11 @@ python -m hommi.deployment.rby1_wbc_policy
 ## 📜 Citation
 ```console
 @article{xu2026hommi,
-	title={HoMMI: Learning Whole-Body Mobile Manipulation from Human Demonstrations},
-	author={Xu, Xiaomeng and Park, Jisang and Zhang, Han and Cousineau, Eric and Bhat, Aditya and Barreiros, Jose and Wang, Dian and Song, Shuran},
-	journal={arXiv preprint arXiv:2603.03243},
-	year={2026}
-	}
+  title={Hommi: Learning whole-body mobile manipulation from human demonstrations},
+  author={Xu, Xiaomeng and Park, Jisang and Zhang, Han and Cousineau, Eric and Bhat, Aditya and Barreiros, Jose and Wang, Dian and Bohg, Jeannette and Song, Shuran},
+  journal={arXiv preprint arXiv:2603.03243},
+  year={2026}
+}
 ```
 
 ## 🏷️ License
