@@ -22,10 +22,7 @@ def pose_6d_to_4x4(mat):
     return np.array([
         affines.compose(
             T=pose6d[:3],
-            R=axangles.axangle2mat(
-                axis=pose6d[3:]/np.linalg.norm(pose6d[3:]),
-                angle=np.linalg.norm(pose6d[3:]),
-            ),
+            R=Rotation.from_rotvec(pose6d[3:]).as_matrix(),
             Z=np.ones(3)
         )
         for pose6d in mat

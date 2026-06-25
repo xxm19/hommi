@@ -78,8 +78,12 @@ def detect_localize_aruco_tags_iphone(
     param = cv2.aruco.DetectorParameters()
     if refine_subpix:
         param.cornerRefinementMethod = cv2.aruco.CORNER_REFINE_SUBPIX
-    corners, ids, rejectedImgPoints = cv2.aruco.detectMarkers(
-        image=img, dictionary=aruco_dict, parameters=param)
+    if hasattr(cv2.aruco, 'detectMarkers'):
+        corners, ids, rejectedImgPoints = cv2.aruco.detectMarkers(
+            image=img, dictionary=aruco_dict, parameters=param)
+    else:
+        detector = cv2.aruco.ArucoDetector(aruco_dict, param)
+        corners, ids, rejectedImgPoints = detector.detectMarkers(img)
     if len(corners) == 0:
         return dict()
 
@@ -90,11 +94,32 @@ def detect_localize_aruco_tags_iphone(
             continue
         
         marker_size_m = marker_size_map[this_id]
-        rvec, tvec, markerPoints = cv2.aruco.estimatePoseSingleMarkers(
-            this_corners, marker_size_m, K, np.zeros((1,5)))
+        if hasattr(cv2.aruco, 'estimatePoseSingleMarkers'):
+            rvec, tvec, markerPoints = cv2.aruco.estimatePoseSingleMarkers(
+                this_corners, marker_size_m, K, np.zeros((1,5)))
+            rvec = rvec.squeeze()
+            tvec = tvec.squeeze()
+        else:
+            half_marker = marker_size_m / 2
+            marker_points = np.array([
+                [-half_marker, half_marker, 0],
+                [half_marker, half_marker, 0],
+                [half_marker, -half_marker, 0],
+                [-half_marker, -half_marker, 0],
+            ], dtype=np.float32)
+            ok, rvec, tvec = cv2.solvePnP(
+                marker_points,
+                this_corners.squeeze().astype(np.float32),
+                K,
+                np.zeros((1,5)),
+                flags=cv2.SOLVEPNP_IPPE_SQUARE)
+            if not ok:
+                continue
+            rvec = rvec.squeeze()
+            tvec = tvec.squeeze()
         tag_dict[this_id] = {
-            'rvec': rvec.squeeze(),
-            'tvec': tvec.squeeze(),
+            'rvec': rvec,
+            'tvec': tvec,
             'corners': this_corners.squeeze()
         }
     return tag_dict
