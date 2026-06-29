@@ -44,6 +44,11 @@ export HOMMI_RBY1_WBC_ROOT="$HOMMI_ROOT/deps/rby1-wbc"
 export PYTHONPATH="$HOMMI_UMI_ROOT:$HOMMI_RBY1_WBC_ROOT:$HOMMI_ROOT:${PYTHONPATH}"
 ```
 
+## Data Collection
+Download iPhone mount CAD file [here](https://drive.google.com/drive/folders/11eYyGpZgONSzI9i9WdD2V2F-GlcFdUVo?usp=share_link)
+
+Install and setup iPhone app for data collection [here](https://github.com/real-stanford/iPhUMI)
+
 ## Process HoMMI demonstrations
 ```bash
 cd hommi/demonstration_processing
